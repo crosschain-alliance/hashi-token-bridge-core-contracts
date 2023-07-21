@@ -13,6 +13,8 @@ interface ISJReceiver {
 
     event MessageProcessed(SJMessage);
 
+    function advanceMessage(SJMessage calldata message) external;
+
     function getMessageId(SJMessage memory message) external pure returns (bytes32);
 
     function onMessage(SJMessage calldata message) external;

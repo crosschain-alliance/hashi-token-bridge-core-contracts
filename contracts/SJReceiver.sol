@@ -43,6 +43,7 @@ contract SJReceiver is ISJReceiver, Context {
         sjFactory = sjFactory_;
     }
 
+    /// @inheritdoc ISJReceiver
     function advanceMessage(SJMessage calldata message) external {
         bytes32 messageId = getMessageId(message);
         if (_executedMessages[messageId] || _advancedMessages[messageId]) {
