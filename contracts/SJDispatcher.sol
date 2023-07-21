@@ -27,10 +27,10 @@ contract SJDispatcher is ISJDispatcher {
         uint256 amount,
         address receiver
     ) external {
-        bytes32 messageId = keccak256(abi.encodePacked(blockhash(block.number - 1), gasleft()));
+        bytes32 salt = keccak256(abi.encodePacked(blockhash(block.number - 1), gasleft()));
 
         SJMessage memory sjMessage = SJMessage(
-            messageId,
+            salt,
             block.chainid,
             underlyingTokenChainId,
             amount,

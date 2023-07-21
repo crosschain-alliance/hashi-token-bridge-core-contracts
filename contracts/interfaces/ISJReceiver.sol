@@ -9,9 +9,11 @@ import {SJMessage} from "./ISJMessage.sol";
  * @notice
  */
 interface ISJReceiver {
+    event MessageAdvanced(SJMessage);
+
     event MessageProcessed(SJMessage);
 
-    function getMessageHash(SJMessage memory message) external pure returns (bytes32);
+    function getMessageId(SJMessage memory message) external pure returns (bytes32);
 
     function onMessage(SJMessage calldata message) external;
 }
