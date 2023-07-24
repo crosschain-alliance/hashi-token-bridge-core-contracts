@@ -14,8 +14,6 @@ In the worst case, the system's speed is equivalent to that of the slowest oracl
 
 It is important to understand how Safe Junction differs from existing cross-chain solutions (bridges, aggregators, etc.) in terms of security (which is additive), speed (via Fast Lane MM intervention) and compatibility (as it aims to be 100% agnostic, and not just EVM compatible).
 
-This repository contains the first prototype of Safe Junction, which was designed and implemented at the ETHGlobal Lisbon hackathon. While the protocol is fundamentally blockchain agnostic, this specific implementation has been designed for EVM blockchains and is built on top of the Hashi EVM Hash Oracle aggregator.
-
 &nbsp;
 
 ***
