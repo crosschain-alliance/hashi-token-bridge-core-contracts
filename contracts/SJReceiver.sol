@@ -19,7 +19,6 @@ contract SJReceiver is ISJReceiver, Context {
     address public immutable sjFactory;
 
     mapping(bytes32 => bool) private _executedMessages;
-    mapping(bytes32 => bool) private _advancedMessages;
     mapping(bytes32 => address) private _advancedMessagesExecutors;
 
     modifier onlyYaru() {
@@ -46,7 +45,7 @@ contract SJReceiver is ISJReceiver, Context {
     /// @inheritdoc ISJReceiver
     function advanceMessage(SJMessage calldata message) external {
         bytes32 messageId = getMessageId(message);
-        if (_executedMessages[messageId] || _advancedMessages[messageId]) {
+        if (_executedMessages[messageId] || _advancedMessagesExecutors[messageId] != address(0)) {
             revert MessageAlreadyProcessed(message);
         }
 
@@ -67,7 +66,6 @@ contract SJReceiver is ISJReceiver, Context {
         ISJToken(sjTokenAddress).transferFrom(executor, message.receiver, message.amount);
         // ISJToken(sjTokenAddress).transfer(executor, fee);
 
-        _advancedMessages[messageId];
         _advancedMessagesExecutors[messageId] = executor;
         emit MessageAdvanced(message);
     }
@@ -111,8 +109,10 @@ contract SJReceiver is ISJReceiver, Context {
         }
 
         address effectiveReceiver = message.receiver;
-        if (_advancedMessages[messageId]) {
-            effectiveReceiver = _advancedMessagesExecutors[messageId];
+
+        address advancedMessageExecutor = _advancedMessagesExecutors[messageId];
+        if (advancedMessageExecutor != address(0)) {
+            effectiveReceiver = advancedMessageExecutor;
         }
 
         if (block.chainid == message.underlyingTokenChainId) {
