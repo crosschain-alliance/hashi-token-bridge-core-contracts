@@ -9,6 +9,8 @@ require('solidity-coverage')
 require('@nomicfoundation/hardhat-toolbox')
 require('hardhat-spdx-license-identifier')
 
+require('./tasks')
+
 const getEnvironmentVariable = (_envVar) => process.env[_envVar] || ''
 
 /**
