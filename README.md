@@ -1,6 +1,6 @@
 # Safe Junction Core Contracts
 
-[![GitHub license](https://img.shields.io/badge/licence-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
 
 ## Overview
 
