@@ -39,7 +39,7 @@ contract SJToken is ISJToken, ERC20 {
         uint256 underlyingTokenChainId_,
         address sjDispatcher_,
         address sjReceiver_
-    ) ERC20(string.concat("SJ ", underlyingTokenName), string.concat("*", underlyingTokenSymbol)) {
+    ) ERC20(string.concat("SJ ", underlyingTokenName_), string.concat("*", underlyingTokenSymbol_)) {
         // TODO: check parameters validity
         sjDispatcher = sjDispatcher_;
         sjReceiver = sjReceiver_;

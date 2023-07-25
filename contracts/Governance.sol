@@ -7,6 +7,7 @@ error NotGovernance();
 contract Governance is Ownable {
     address[] private _sourceAdapters;
     address[] private _destinationAdapters;
+    mapping(uint256 => address) private _chainIdSJReceivers;
 
     function addSourceAdapter(address adapter) external onlyOwner {
         _sourceAdapters.push(adapter);
@@ -22,5 +23,13 @@ contract Governance is Ownable {
 
     function getSourceAdapters() external view returns (address[] memory) {
         return _sourceAdapters;
+    }
+
+    function getSJReceiverByChainId(uint256 chainId) external view returns (address) {
+        return _chainIdSJReceivers[chainId];
+    }
+
+    function setSJReceiverByChainId(uint256 chainId, address jsReceiver) external onlyOwner {
+        _chainIdSJReceivers[chainId] = jsReceiver;
     }
 }

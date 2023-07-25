@@ -1,0 +1,30 @@
+task('governance:addSourceAdapter')
+  .addParam('governance', 'Governance address')
+  .addParam('sourceAdapter', 'Source Adapter address')
+  .setAction(async (_args) => {
+    const Governance = await ethers.getContractFactory('Governance')
+    const governance = await Governance.attach(_args.governance)
+    console.log('Adding source adapter ...')
+    await governance.addSourceAdapter(_args.sourceAdapter)
+  })
+
+task('governance:addDestinationAdapter')
+  .addParam('governance', 'Governance address')
+  .addParam('destinationAdapter', 'Destination Adapter address')
+  .setAction(async (_args) => {
+    const Governance = await ethers.getContractFactory('Governance')
+    const governance = await Governance.attach(_args.governance)
+    console.log('Adding destination adapter ...')
+    await governance.addDestinationAdapter(_args.destinationAdapter)
+  })
+
+task('governance:setSJReceiverByChainId')
+  .addParam('governance', 'Governance address')
+  .addParam('sjReceiver', 'SJReceiver address corresponding on the specified chain id')
+  .addParam('chainId', 'chain id')
+  .setAction(async (_args) => {
+    const Governance = await ethers.getContractFactory('Governance')
+    const governance = await Governance.attach(_args.governance)
+    console.log('Setting JSReceiver ...')
+    await governance.setSJReceiverByChainId(_args.chainId, _args.sjReceiver)
+  })

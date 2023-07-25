@@ -1,5 +1,9 @@
-const safeJunctionTasks = require('./safe-junction')
+const deployTasks = require('./deploy')
+const governanceTasks = require('./governance')
+const sjTokenTasks = require('./sj-token')
 
 module.exports = {
-  safeJunctionTasks
+  deployTasks,
+  governanceTasks,
+  sjTokenTasks
 }

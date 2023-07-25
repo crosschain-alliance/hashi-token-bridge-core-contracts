@@ -9,7 +9,6 @@ import {IGovernance} from "./interfaces/IGovernance.sol";
 contract SJDispatcher is ISJDispatcher {
     address public immutable yaho;
     address public immutable governance;
-    address public sjReceiver;
 
     constructor(address yaho_, address governance_) {
         yaho = yaho_;
@@ -47,7 +46,7 @@ contract SJDispatcher is ISJDispatcher {
             sjMessage
         );
 
-        // TODO: sjReceiver = IGovernance(governance).getSJReceiverByChainId()
+        address sjReceiver = IGovernance(governance).getSJReceiverByChainId(destinationChainId);
 
         Message[] memory messages = new Message[](1);
         messages[0] = Message(sjReceiver, destinationChainId, sjData);
@@ -59,10 +58,5 @@ contract SJDispatcher is ISJDispatcher {
         );
 
         emit MessageDispatched(sjMessage);
-    }
-
-    // TODO: remove this fx since sjReceiver will be calculated using IGovernance(governance).getSJReceiverByChainId(destinationChainId)
-    function setSjReceiver(address sjReceiver_) external {
-        sjReceiver = sjReceiver_;
     }
 }

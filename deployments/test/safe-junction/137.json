@@ -1,0 +1,14 @@
+{
+  "governance": "0xBfeD3f449D6f0Ff9aaA2bA219947216782C556eB",
+  "sjDispatcher": "0x361dAEcE9157D82801f234311477Af8Af35Fae57",
+  "sjFactory": "0xFe1Ec8c7d004294414D5bF710daf9B735e2E580a",
+  "sjReceiver": "0x1dA797F5CbA2e027391b49C5fc258e921211BA5a",
+  "sjToken": {
+    "sjTokenAddress": "0x5a3dbF1315FFb7EF4e8d4092098DA41D50316d18",
+    "underlyingTokenAddress": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+    "underlyingTokenName": "Wrapped XDAI",
+    "underlyingTokenSymbol": "WXDAI",
+    "underlyingTokenDecimals": "18",
+    "underlyingTokenChainId": "100"
+  }
+}

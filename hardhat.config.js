@@ -35,12 +35,12 @@ module.exports = {
     gnosis: {
       url: getEnvironmentVariable('GNOSIS_CHAIN_NODE'),
       accounts: [getEnvironmentVariable('PK')],
-      gasPrice: 5e9
+      gasPrice: 1.6e9
     },
     polygon: {
       url: getEnvironmentVariable('POLYGON_NODE'),
       accounts: [getEnvironmentVariable('PK')],
-      gasPrice: 220e9
+      gasPrice: 150e9
     }
   },
   gasReporter: {
@@ -52,5 +52,11 @@ module.exports = {
   },
   mocha: {
     timeout: 100000000
+  },
+  etherscan: {
+    apiKey: {
+      gnosis: process.env.GNOSISSCAN_API_KEY || '',
+      polygon: process.env.POLYGONSCAN_API_KEY || ''
+    }
   }
 }

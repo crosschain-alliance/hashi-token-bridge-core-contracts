@@ -116,8 +116,8 @@ describe('SafeJunction', () => {
     await sjFactoryNative.renounceOwnership()
     await sjFactoryHost.renounceOwnership()
 
-    await sjDispatcherNative.setSjReceiver(sjReceiverHost.address)
-    await sjDispatcherHost.setSjReceiver(sjReceiverNative.address)
+    await governanceHost.setSJReceiverByChainId(currentChainId, sjReceiverNative.address)
+    await governanceNative.setSJReceiverByChainId(DESTINATION_CHAIN_ID, sjReceiverHost.address)
 
     token = await Token.deploy('Token', 'TKN', ethers.utils.parseEther('2000000000'))
 
