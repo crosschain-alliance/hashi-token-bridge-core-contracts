@@ -13,12 +13,12 @@ interface ISJDispatcher {
 
     function dispatch(
         uint256 destinationChainId,
-        address sourceTokenAddress,
-        string calldata sourceTokenName,
-        string calldata sourceTokenSymbol,
-        uint8 sourceTokenDecimals,
-        uint256 sourceTokenChainId,
-        uint256 sourceTokenAmount,
+        address underlyingTokenAddress,
+        string calldata underlyingTokenName,
+        string calldata underlyingTokenSymbol,
+        uint8 underlyingTokenDecimals,
+        uint256 underlyingTokenChainId,
+        uint256 amount,
         address receiver
     ) external;
 }
