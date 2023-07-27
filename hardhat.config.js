@@ -40,7 +40,12 @@ module.exports = {
     polygon: {
       url: getEnvironmentVariable('POLYGON_NODE'),
       accounts: [getEnvironmentVariable('PK')],
-      gasPrice: 150e9
+      gasPrice: 100e9
+    },
+    goerli: {
+      url: getEnvironmentVariable('GOERLI_NODE'),
+      accounts: [getEnvironmentVariable('PK')],
+      gasPrice: 3.2e9
     }
   },
   gasReporter: {
