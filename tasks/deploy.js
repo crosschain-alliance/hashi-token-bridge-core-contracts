@@ -106,6 +106,7 @@ task('deploy:SJToken')
     const receipt = await transaction.wait()
     const event = receipt.events.find(({ event }) => event === 'SJTokenDeployed')
     const { sjTokenAddress } = event.args
+
     console.log(
       JSON.stringify({
         sjTokenAddress,

@@ -1,10 +1,10 @@
 {
-  "governance": "0xBfeD3f449D6f0Ff9aaA2bA219947216782C556eB",
-  "sjDispatcher": "0x361dAEcE9157D82801f234311477Af8Af35Fae57",
-  "sjFactory": "0xFe1Ec8c7d004294414D5bF710daf9B735e2E580a",
-  "sjReceiver": "0x1dA797F5CbA2e027391b49C5fc258e921211BA5a",
+  "governance": "0x54EC53377c682038ACcB5799d9CC604E9e2a3BDB",
+  "sjDispatcher": "0x888f94a9703D8a41f827007F6C78d8D35792DE6e",
+  "sjFactory": "0x4f95d0A65725448b08299baabFf3d22F4465B857",
+  "sjReceiver": "0x5c19FBd93eC74eC8Fac8C9785Dfe04BAb0EF8264",
   "sjToken": {
-    "sjTokenAddress": "0x5a3dbF1315FFb7EF4e8d4092098DA41D50316d18",
+    "sjTokenAddress": "0x43951194F8f7FAaB0e89b24a1ee849E5EBA05210",
     "underlyingTokenAddress": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
     "underlyingTokenName": "Wrapped XDAI",
     "underlyingTokenSymbol": "WXDAI",

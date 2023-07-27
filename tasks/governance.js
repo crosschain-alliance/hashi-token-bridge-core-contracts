@@ -18,6 +18,17 @@ task('governance:addDestinationAdapter')
     await governance.addDestinationAdapter(_args.destinationAdapter)
   })
 
+task('governance:setSJDispatcherByChainId')
+  .addParam('governance', 'Governance address')
+  .addParam('sjDispatcher', 'SJDispatcher address corresponding on the specified chain id')
+  .addParam('chainId', 'chain id')
+  .setAction(async (_args) => {
+    const Governance = await ethers.getContractFactory('Governance')
+    const governance = await Governance.attach(_args.governance)
+    console.log('Setting SJDispatcher ...')
+    await governance.setSJDispatcherByChainId(_args.chainId, _args.sjDispatcher)
+  })
+
 task('governance:setSJReceiverByChainId')
   .addParam('governance', 'Governance address')
   .addParam('sjReceiver', 'SJReceiver address corresponding on the specified chain id')

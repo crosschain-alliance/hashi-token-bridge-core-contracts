@@ -1,24 +1,28 @@
 pragma solidity ^0.8.19;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISJFactory} from "./interfaces/ISJFactory.sol";
 import {SJMessage} from "./interfaces/ISJMessage.sol";
 import {ISJReceiver} from "./interfaces/ISJReceiver.sol";
 import {ISJToken} from "./interfaces/ISJToken.sol";
+import {IGovernance} from "./interfaces/IGovernance.sol";
 
 error NotYaru();
 error InvalidSJDispatcher();
 error MessageAlreadyProcessed(SJMessage message);
 error SJTokenNotCreated(address sjTokenAddress);
+error MessageAlreadyAdvanced(SJMessage message);
 
 contract SJReceiver is ISJReceiver, Context {
     using SafeERC20 for ISJToken;
+    using SafeERC20 for IERC20;
 
     address public immutable yaru;
     address public immutable sjFactory;
 
-    mapping(bytes32 => bool) private _executedMessages;
+    mapping(bytes32 => bool) private _processedMessages;
     mapping(bytes32 => address) private _advancedMessagesExecutors;
 
     modifier onlyYaru() {
@@ -26,14 +30,6 @@ contract SJReceiver is ISJReceiver, Context {
             revert NotYaru();
         }
 
-        _;
-    }
-
-    modifier messageSenderMustBeDispatcher(SJMessage calldata message) {
-        // address dispatcher = IGovernance(sender).getDispatcherByChainId(message.sourceChainId)
-        // if (dispatcher != _msgSender()) {
-        //     revert InvalidSJDispatcher()
-        // }
         _;
     }
 
@@ -45,28 +41,30 @@ contract SJReceiver is ISJReceiver, Context {
     /// @inheritdoc ISJReceiver
     function advanceMessage(SJMessage calldata message) external {
         bytes32 messageId = getMessageId(message);
-        if (_executedMessages[messageId] || _advancedMessagesExecutors[messageId] != address(0)) {
-            revert MessageAlreadyProcessed(message);
-        }
+
+        if (_advancedMessagesExecutors[messageId] != address(0)) revert MessageAlreadyAdvanced(message);
+        if (_processedMessages[messageId]) revert MessageAlreadyProcessed(message);
 
         address executor = _msgSender();
-        address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
-            message.underlyingTokenAddress,
-            message.underlyingTokenName,
-            message.underlyingTokenSymbol,
-            message.underlyingTokenDecimals,
-            message.underlyingTokenChainId
-        );
-        if (sjTokenAddress.code.length == 0) {
-            revert SJTokenNotCreated(sjTokenAddress);
+        _advancedMessagesExecutors[messageId] = executor;
+
+        if (block.chainid == message.underlyingTokenChainId) {
+            IERC20(message.underlyingTokenAddress).safeTransferFrom(executor, address(this), message.amount);
+            IERC20(message.underlyingTokenAddress).safeTransfer(message.receiver, message.amount);
+        } else {
+            address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
+                message.underlyingTokenAddress,
+                message.underlyingTokenName,
+                message.underlyingTokenSymbol,
+                message.underlyingTokenDecimals,
+                message.underlyingTokenChainId
+            );
+            if (sjTokenAddress.code.length == 0) revert SJTokenNotCreated(sjTokenAddress);
+
+            ISJToken(sjTokenAddress).safeTransferFrom(executor, address(this), message.amount);
+            ISJToken(sjTokenAddress).safeTransfer(message.receiver, message.amount);
         }
 
-        // TODO: remove fee
-        // uint256 fee = 0;
-        ISJToken(sjTokenAddress).transferFrom(executor, message.receiver, message.amount);
-        // ISJToken(sjTokenAddress).transfer(executor, fee);
-
-        _advancedMessagesExecutors[messageId] = executor;
         emit MessageAdvanced(message);
     }
 
@@ -90,12 +88,52 @@ contract SJReceiver is ISJReceiver, Context {
     }
 
     /// @inheritdoc ISJReceiver
-    function onMessage(SJMessage calldata message) external onlyYaru messageSenderMustBeDispatcher(message) {
+    function onMessage(SJMessage calldata message) external onlyYaru {
+        // TODO: Yaru.executeMessages invokes this contract in this way:
+        // (bool success, bytes memory returnData) = address(message.to).call(message.data);
+        // How can we be sure that sjMessage.sender is actually SJDispatcher?
+        // An attacker could generate fake sjMessage (within a fake SJDispatcher on the source chain) by using the address of
+        // SJDispatcher (hardcodedSJDispatcherAddress):
+        //
+        //
+        // SJMessage memory sjMessage = SJMessage(
+        //     salt,
+        //     block.chainid,
+        //     underlyingTokenChainId,
+        //     amount,
+        //     - address(this),
+        //     + hardcodedSJDispatcherAddress,
+        //     receiver,
+        //     underlyingTokenAddress,
+        //     underlyingTokenDecimals,
+        //     underlyingTokenName,
+        //     underlyingTokenSymbol
+        // );
+        //
+        // bytes memory sjData = abi.encodeWithSignature(
+        //     "onMessage((bytes32,uint256,uint256,uint256,address,address,address,uint8,string,string))",
+        //     sjMessage
+        // );
+        //
+        // address sjReceiver = IGovernance(governance).getSJReceiverByChainId(destinationChainId);
+        //
+        // Message[] memory messages = new Message[](1);
+        // messages[0] = Message(sjReceiver, destinationChainId, sjData);
+        //
+        // IYaho(yaho).dispatchMessagesToAdapters(
+        //     messages,
+        //     IGovernance(governance).getSourceAdapters(),
+        //     IGovernance(governance).getDestinationAdapters()
+        // );
+        //
+        //
+        // In this way an attacker could mint an SJToken without depositing the collateral.
+        // Hashi should pass the address of who dispatched the message here.
+
         bytes32 messageId = getMessageId(message);
-        if (_executedMessages[messageId]) {
-            revert MessageAlreadyProcessed(message);
-        }
-        _executedMessages[messageId] = true;
+
+        if (_processedMessages[messageId]) revert MessageAlreadyProcessed(message);
+        _processedMessages[messageId] = true;
 
         address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
             message.underlyingTokenAddress,
@@ -104,22 +142,14 @@ contract SJReceiver is ISJReceiver, Context {
             message.underlyingTokenDecimals,
             message.underlyingTokenChainId
         );
-        if (sjTokenAddress.code.length == 0) {
-            revert SJTokenNotCreated(sjTokenAddress);
-        }
-
-        address effectiveReceiver = message.receiver;
+        if (sjTokenAddress.code.length == 0) revert SJTokenNotCreated(sjTokenAddress);
 
         address advancedMessageExecutor = _advancedMessagesExecutors[messageId];
-        if (advancedMessageExecutor != address(0)) {
-            effectiveReceiver = advancedMessageExecutor;
-        }
+        address effectiveReceiver = advancedMessageExecutor != address(0) ? advancedMessageExecutor : message.receiver;
 
-        if (block.chainid == message.underlyingTokenChainId) {
-            ISJToken(sjTokenAddress).xReleaseCollateral(effectiveReceiver, message.amount);
-        } else {
-            ISJToken(sjTokenAddress).xMint(effectiveReceiver, message.amount);
-        }
+        block.chainid == message.underlyingTokenChainId
+            ? ISJToken(sjTokenAddress).xReleaseCollateral(effectiveReceiver, message.amount)
+            : ISJToken(sjTokenAddress).xMint(effectiveReceiver, message.amount);
 
         emit MessageProcessed(message);
     }

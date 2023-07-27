@@ -7,7 +7,11 @@ interface IGovernance {
 
     function getDestinationAdapters() external view returns (address[] memory);
 
+    function getSJDispatcherByChainId(uint256 chainId) external view returns (address);
+
     function getSourceAdapters() external view returns (address[] memory);
+
+    function setSJDispatcherByChainId(uint256 chainId, address sjDispatcher) external;
 
     function getSJReceiverByChainId(uint256 chainId) external view returns (address);
 
