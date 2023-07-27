@@ -48,9 +48,12 @@ contract SJReceiver is ISJReceiver, Context {
         address executor = _msgSender();
         _advancedMessagesExecutors[messageId] = executor;
 
+        uint256 bpsFee = 10; //FIXME
+        uint256 effectiveAmount = (message.amount * (10000 - bpsFee)) / 10000;
+
         if (block.chainid == message.underlyingTokenChainId) {
-            IERC20(message.underlyingTokenAddress).safeTransferFrom(executor, address(this), message.amount);
-            IERC20(message.underlyingTokenAddress).safeTransfer(message.receiver, message.amount);
+            IERC20(message.underlyingTokenAddress).safeTransferFrom(executor, address(this), effectiveAmount);
+            IERC20(message.underlyingTokenAddress).safeTransfer(message.receiver, effectiveAmount);
         } else {
             address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
                 message.underlyingTokenAddress,
@@ -61,8 +64,8 @@ contract SJReceiver is ISJReceiver, Context {
             );
             if (sjTokenAddress.code.length == 0) revert SJTokenNotCreated(sjTokenAddress);
 
-            ISJToken(sjTokenAddress).safeTransferFrom(executor, address(this), message.amount);
-            ISJToken(sjTokenAddress).safeTransfer(message.receiver, message.amount);
+            ISJToken(sjTokenAddress).safeTransferFrom(executor, address(this), effectiveAmount);
+            ISJToken(sjTokenAddress).safeTransfer(message.receiver, effectiveAmount);
         }
 
         emit MessageAdvanced(message);
