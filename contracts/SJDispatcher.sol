@@ -53,8 +53,8 @@ contract SJDispatcher is ISJDispatcher {
 
         IYaho(yaho).dispatchMessagesToAdapters(
             messages,
-            IGovernance(governance).getSourceAdapters(),
-            IGovernance(governance).getDestinationAdapters()
+            IGovernance(governance).getSourceAdaptersByChainId(destinationChainId),
+            IGovernance(governance).getDestinationAdaptersByChainId(destinationChainId)
         );
 
         emit MessageDispatched(sjMessage);

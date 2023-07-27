@@ -5,29 +5,29 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 error NotGovernance();
 
 contract Governance is Ownable {
-    address[] private _sourceAdapters;
-    address[] private _destinationAdapters;
+    mapping(uint256 => address[]) private _chainIdSourceAdapters;
+    mapping(uint256 => address[]) private _chainIdDestinationAdapters;
     mapping(uint256 => address) private _chainIdSJReceivers;
     mapping(uint256 => address) private _chainIdSJDispatcher;
 
-    function addSourceAdapter(address adapter) external onlyOwner {
-        _sourceAdapters.push(adapter);
+    function addSourceAdapterByChainid(uint256 chainId, address adapter) external onlyOwner {
+        _chainIdSourceAdapters[chainId].push(adapter);
     }
 
-    function addDestinationAdapter(address adapter) external onlyOwner {
-        _destinationAdapters.push(adapter);
+    function addDestinationAdapterByChainid(uint256 chainId, address adapter) external onlyOwner {
+        _chainIdDestinationAdapters[chainId].push(adapter);
     }
 
-    function getDestinationAdapters() external view returns (address[] memory) {
-        return _destinationAdapters;
+    function getDestinationAdaptersByChainId(uint256 chainId) external view returns (address[] memory) {
+        return _chainIdDestinationAdapters[chainId];
     }
 
     function getSJDispatcherByChainId(uint256 chainId) external view returns (address) {
         return _chainIdSJDispatcher[chainId];
     }
 
-    function getSourceAdapters() external view returns (address[] memory) {
-        return _sourceAdapters;
+    function getSourceAdaptersByChainId(uint256 chainId) external view returns (address[] memory) {
+        return _chainIdSourceAdapters[chainId];
     }
 
     function setSJDispatcherByChainId(uint256 chainId, address sjDispatcher) external onlyOwner {
