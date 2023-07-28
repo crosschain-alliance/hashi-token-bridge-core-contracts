@@ -1,7 +1,7 @@
 pragma solidity ^0.8.19;
 
 interface IGovernance {
-    function addSourceAdapterByChainid(uint256 chainId, address adapter) external;
+    function addMessageRelayByChainid(uint256 chainId, address adapter) external;
 
     function addDestinationAdapterByChainid(uint256 chainId, address adapter) external;
 
@@ -9,7 +9,7 @@ interface IGovernance {
 
     function getSJDispatcherByChainId(uint256 chainId) external view returns (address);
 
-    function getSourceAdaptersByChainId(uint256 chainId) external view returns (address[] memory);
+    function getMessageRelayByChainId(uint256 chainId) external view returns (address[] memory);
 
     function setSJDispatcherByChainId(uint256 chainId, address sjDispatcher) external;
 

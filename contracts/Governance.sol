@@ -5,13 +5,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 error NotGovernance();
 
 contract Governance is Ownable {
-    mapping(uint256 => address[]) private _chainIdSourceAdapters;
+    mapping(uint256 => address[]) private _chainIdMessageRelay;
     mapping(uint256 => address[]) private _chainIdDestinationAdapters;
     mapping(uint256 => address) private _chainIdSJReceivers;
     mapping(uint256 => address) private _chainIdSJDispatcher;
 
-    function addSourceAdapterByChainid(uint256 chainId, address adapter) external onlyOwner {
-        _chainIdSourceAdapters[chainId].push(adapter);
+    function addMessageRelayByChainid(uint256 chainId, address messageRelayer) external onlyOwner {
+        _chainIdMessageRelay[chainId].push(messageRelayer);
     }
 
     function addDestinationAdapterByChainid(uint256 chainId, address adapter) external onlyOwner {
@@ -26,8 +26,8 @@ contract Governance is Ownable {
         return _chainIdSJDispatcher[chainId];
     }
 
-    function getSourceAdaptersByChainId(uint256 chainId) external view returns (address[] memory) {
-        return _chainIdSourceAdapters[chainId];
+    function getMessageRelayByChainId(uint256 chainId) external view returns (address[] memory) {
+        return _chainIdMessageRelay[chainId];
     }
 
     function setSJDispatcherByChainId(uint256 chainId, address sjDispatcher) external onlyOwner {
