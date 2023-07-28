@@ -1,15 +1,15 @@
 task(
-  'governance:addSourceAdapterByChainid',
-  'Add a sourceAdapter to be used when a certain chainIs is used as destination chain id'
+  'governance:addMessageRelayByChainid',
+  'Add a messageRelay to be used when a certain chainIs is used as destination chain id'
 )
   .addParam('governance', 'Governance address')
-  .addParam('sourceAdapter', 'Source Adapter address')
+  .addParam('messageRelay', 'Source Adapter address')
   .addParam('chainId', 'Destination chain id')
   .setAction(async (_args) => {
     const Governance = await ethers.getContractFactory('Governance')
     const governance = await Governance.attach(_args.governance)
     console.log('Adding source adapter ...')
-    await governance.addSourceAdapterByChainid(_args.chainId, _args.sourceAdapter)
+    await governance.addMessageRelayByChainid(_args.chainId, _args.messageRelay)
   })
 
 task(
