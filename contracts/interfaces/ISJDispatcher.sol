@@ -19,6 +19,7 @@ interface ISJDispatcher {
         uint8 underlyingTokenDecimals,
         uint256 underlyingTokenChainId,
         uint256 amount,
+        uint256 fastLaneFeeAmount,
         address receiver
     ) external;
 }

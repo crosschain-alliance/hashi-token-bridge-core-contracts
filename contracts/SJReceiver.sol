@@ -14,6 +14,7 @@ error InvalidSJDispatcher();
 error MessageAlreadyProcessed(SJMessage message);
 error SJTokenNotCreated(address sjTokenAddress);
 error MessageAlreadyAdvanced(SJMessage message);
+error InvalidFastLaneFeeAmount(uint256 fastLaneFeeAmount);
 
 contract SJReceiver is ISJReceiver, Context {
     using SafeERC20 for ISJToken;
@@ -44,12 +45,12 @@ contract SJReceiver is ISJReceiver, Context {
 
         if (_advancedMessagesExecutors[messageId] != address(0)) revert MessageAlreadyAdvanced(message);
         if (_processedMessages[messageId]) revert MessageAlreadyProcessed(message);
+        if (message.fastLaneFeeAmount == 0) revert InvalidFastLaneFeeAmount(message.fastLaneFeeAmount);
 
         address executor = _msgSender();
         _advancedMessagesExecutors[messageId] = executor;
 
-        uint256 bpsFee = 10; //FIXME
-        uint256 effectiveAmount = (message.amount * (10000 - bpsFee)) / 10000;
+        uint256 effectiveAmount = message.amount - message.fastLaneFeeAmount;
 
         if (block.chainid == message.underlyingTokenChainId) {
             IERC20(message.underlyingTokenAddress).safeTransferFrom(executor, address(this), effectiveAmount);

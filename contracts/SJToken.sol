@@ -9,6 +9,7 @@ import {ISJDispatcher} from "./interfaces/ISJDispatcher.sol";
 
 error InvalidSJTransfer();
 error InvalidSJReceiver();
+error InvalidFastLaneFeeAmount(uint256 fastLaneFeeAmount);
 
 contract SJToken is ISJToken, ERC20 {
     using SafeERC20 for IERC20;
@@ -51,7 +52,16 @@ contract SJToken is ISJToken, ERC20 {
     }
 
     /// @inheritdoc ISJToken
-    function xTransfer(uint256 destinationChainId, address account, uint256 amount) external {
+    function xTransfer(
+        uint256 destinationChainId,
+        address account,
+        uint256 amount,
+        uint256 fastLaneFeeAmount
+    ) external {
+        if (fastLaneFeeAmount > amount) {
+            revert InvalidFastLaneFeeAmount(fastLaneFeeAmount);
+        }
+
         bool isTokenUnderlyingChainId = block.chainid == underlyingTokenChainId;
 
         if (destinationChainId != block.chainid && isTokenUnderlyingChainId) {
@@ -70,6 +80,7 @@ contract SJToken is ISJToken, ERC20 {
             underlyingTokenDecimals,
             underlyingTokenChainId,
             Utils.normalizeAmountTo18Decimals(amount, underlyingTokenDecimals),
+            fastLaneFeeAmount,
             account
         );
     }

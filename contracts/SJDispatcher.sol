@@ -24,6 +24,7 @@ contract SJDispatcher is ISJDispatcher {
         uint8 underlyingTokenDecimals,
         uint256 underlyingTokenChainId,
         uint256 amount,
+        uint256 fastLaneFeeAmount,
         address receiver
     ) external {
         bytes32 salt = keccak256(abi.encodePacked(blockhash(block.number - 1), gasleft()));
@@ -33,6 +34,7 @@ contract SJDispatcher is ISJDispatcher {
             block.chainid,
             underlyingTokenChainId,
             amount,
+            fastLaneFeeAmount,
             address(this),
             receiver,
             underlyingTokenAddress,
@@ -42,7 +44,7 @@ contract SJDispatcher is ISJDispatcher {
         );
 
         bytes memory sjData = abi.encodeWithSignature(
-            "onMessage((bytes32,uint256,uint256,uint256,address,address,address,uint8,string,string))",
+            "onMessage((bytes32,uint256,uint256,uint256,uint256,address,address,address,uint8,string,string))",
             sjMessage
         );
 

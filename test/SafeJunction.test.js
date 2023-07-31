@@ -56,10 +56,10 @@ const getHashiMessageFromTransaction = async (_transaction) => {
 const getSJMessageFromTransaction = async (_transaction) => {
   const receipt = await (await _transaction).wait()
   const event = receipt.events.find(
-    ({ topics }) => topics[0] === '0xa635cc4ff0e7c3a1a3fbf61681785dfb7bc28067efc4f09315ff8e8eaf79486a'
+    ({ topics }) => topics[0] === '0x1865bfcee18bcdac6c84bf3dc444b4b79b552decae460b3a41279268bcf9632f'
   )
   const [sjMessage] = ethers.utils.defaultAbiCoder.decode(
-    ['(bytes32,uint256,uint256,uint256,address,address,address,uint8,string,string)'],
+    ['(bytes32,uint256,uint256,uint256,uint256,address,address,address,uint8,string,string)'],
     event.data
   )
   return sjMessage
@@ -149,7 +149,7 @@ describe('SafeJunction', () => {
     const balancePre = await token.balanceOf(owner.address)
     await token.approve(sjTokenNative.address, amount)
 
-    const tx = sjTokenNative.xTransfer(2, user1.address, amount)
+    const tx = sjTokenNative.xTransfer(2, user1.address, amount, 0)
     await expect(tx).to.emit(sjDispatcherNative, 'MessageDispatched')
 
     const balancePost = await token.balanceOf(owner.address)
