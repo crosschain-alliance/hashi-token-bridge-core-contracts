@@ -1,0 +1,16 @@
+{
+  "5": {
+    "hashi": "0x5Cb03c95Fd13Ac13745a50f05B29Bd6Fe6028606",
+    "yaho": "0x0dCA71eF4f6b64771687E9d9264bA5993bBac4A3",
+    "yaru": "0x0c2dEDaA5c83Fa106dF5408d86bDfEcf24A284B7",
+    "ambMessageRelay": "0x5baFEECEFC83CfC8BBf0Da2DA908e806d9fA2B22",
+    "ambAdapter": "0x103Ec3ebc7B85480Da1E37bEDE29B7a072C95d75"
+  },
+  "100": {
+    "hashi": "0x84dEd061896baCeE181ACf2F9dAc87497663F896",
+    "yaho": "0xF7CCA9B89f6C306a033F0E6feeB5AD524699db2D",
+    "yaru": "0xced7e6b4Ff0cfE3fD8dB912FBa12d68Cb14f574e",
+    "ambMessageRelay": "0x423708143afC9F30FAF130Fa6B7e719cd2dc15d4",
+    "ambAdapter": "0xec272f595F8bE91f405360Ec04770922B3e4CD58"
+  }
+}
