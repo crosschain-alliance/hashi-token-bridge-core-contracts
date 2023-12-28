@@ -7,12 +7,12 @@ import {Message} from "./interfaces/hashi/IMessage.sol";
 import {IGovernance} from "./interfaces/IGovernance.sol";
 
 contract SJDispatcher is ISJDispatcher {
-    address public immutable yaho;
-    address public immutable governance;
+    address public immutable YAHO;
+    address public immutable GOVERNANCE;
 
-    constructor(address yaho_, address governance_) {
-        yaho = yaho_;
-        governance = governance_;
+    constructor(address yaho, address governance) {
+        YAHO = yaho;
+        GOVERNANCE = governance;
     }
 
     /// @inheritdoc ISJDispatcher
@@ -48,15 +48,15 @@ contract SJDispatcher is ISJDispatcher {
             sjMessage
         );
 
-        address sjReceiver = IGovernance(governance).getSJReceiverByChainId(destinationChainId);
+        address sjReceiver = IGovernance(GOVERNANCE).getSJReceiverByChainId(destinationChainId);
 
         Message[] memory messages = new Message[](1);
         messages[0] = Message(sjReceiver, destinationChainId, sjData);
 
-        IYaho(yaho).dispatchMessagesToAdapters(
+        IYaho(YAHO).dispatchMessagesToAdapters(
             messages,
-            IGovernance(governance).getMessageRelayByChainId(destinationChainId),
-            IGovernance(governance).getDestinationAdaptersByChainId(destinationChainId)
+            IGovernance(GOVERNANCE).getMessageRelayByChainId(destinationChainId),
+            IGovernance(GOVERNANCE).getDestinationAdaptersByChainId(destinationChainId)
         );
 
         emit MessageDispatched(sjMessage);

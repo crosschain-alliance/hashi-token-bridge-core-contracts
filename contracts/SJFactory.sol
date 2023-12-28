@@ -5,11 +5,11 @@ import {SJToken} from "./SJToken.sol";
 import {ISJFactory} from "./interfaces/ISJFactory.sol";
 
 contract SJFactory is ISJFactory, Ownable {
-    address public immutable sjDispatcher;
+    address public immutable SJ_DISPATCHER;
     address public sjReceiver;
 
-    constructor(address sjDispatcher_) {
-        sjDispatcher = sjDispatcher_;
+    constructor(address sjDispatcher) {
+        SJ_DISPATCHER = sjDispatcher;
     }
 
     /// @inheritdoc ISJFactory
@@ -27,7 +27,7 @@ contract SJFactory is ISJFactory, Ownable {
                 underlyingSourceTokenSymbol,
                 underlyingTokenDecimals,
                 underlyingTokenChainId,
-                sjDispatcher,
+                SJ_DISPATCHER,
                 sjReceiver
             )
         );
@@ -55,7 +55,7 @@ contract SJFactory is ISJFactory, Ownable {
                     underlyingSourceTokenSymbol,
                     underlyingTokenDecimals,
                     underlyingTokenChainId,
-                    sjDispatcher,
+                    SJ_DISPATCHER,
                     sjReceiver
                 )
             );

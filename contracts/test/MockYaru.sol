@@ -8,8 +8,12 @@ import {Message} from "../interfaces/hashi/IMessageDispatcher.sol";
 error CallFailed();
 
 contract MockYaru {
-    function executeMessage(Message calldata message) external {
+    address public sender;
+
+    function executeMessage(Message calldata message, address sender_) external {
+        sender = sender_;
         (bool success, ) = address(message.to).call(message.data);
         if (!success) revert CallFailed();
+        delete sender;
     }
 }

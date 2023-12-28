@@ -101,7 +101,7 @@ describe('SafeJunction', () => {
     yaruNative = await MockYaru.deploy()
     sjDispatcherNative = await SJDispatcher.deploy(yahoNative.address, governanceNative.address)
     sjFactoryNative = await SJFactory.deploy(sjDispatcherNative.address)
-    sjReceiverNative = await SJReceiver.deploy(yaruNative.address, sjFactoryNative.address)
+    
 
     // H O S T
     governanceHost = await Governance.deploy()
@@ -109,7 +109,9 @@ describe('SafeJunction', () => {
     yaruHost = await MockYaru.deploy()
     sjDispatcherHost = await SJDispatcher.deploy(yahoHost.address, governanceHost.address)
     sjFactoryHost = await SJFactory.deploy(sjDispatcherHost.address)
-    sjReceiverHost = await SJReceiver.deploy(yaruHost.address, sjFactoryHost.address)
+    
+    sjReceiverHost = await SJReceiver.deploy(yaruHost.address, sjDispatcherNative.address, sjFactoryHost.address)
+    sjReceiverNative = await SJReceiver.deploy(yaruNative.address, sjDispatcherHost.address, sjFactoryNative.address)
 
     await sjFactoryNative.setSJReceiver(sjReceiverNative.address)
     await sjFactoryHost.setSJReceiver(sjReceiverHost.address)
@@ -157,10 +159,10 @@ describe('SafeJunction', () => {
 
     const sjMessage = await getSJMessageFromTransaction(tx)
     const hashiMessage = await getHashiMessageFromTransaction(tx)
-    // trick to enable xMint since both sjTokens are deployed on the same chain
+    // trick to enable mint since both sjTokens are deployed on the same chain
     const { fakeHashiMessage, fakeSJMessage } = getFakeMessages(hashiMessage, sjMessage)
 
-    await expect(yaruHost.executeMessage(fakeHashiMessage))
+    await expect(yaruHost.executeMessage(fakeHashiMessage, sjDispatcherNative.address))
       .to.emit(sjReceiverHost, 'MessageProcessed')
       .withArgs(fakeSJMessage)
     expect(await sjTokenHost.balanceOf(user1.address)).to.be.eq(amount)

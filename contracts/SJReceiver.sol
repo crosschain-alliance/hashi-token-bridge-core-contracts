@@ -8,8 +8,10 @@ import {SJMessage} from "./interfaces/ISJMessage.sol";
 import {ISJReceiver} from "./interfaces/ISJReceiver.sol";
 import {ISJToken} from "./interfaces/ISJToken.sol";
 import {IGovernance} from "./interfaces/IGovernance.sol";
+import {IYaru} from "./interfaces/hashi/IYaru.sol";
 
-error NotYaru();
+error NotYaru(address caller, address expectedYaru);
+error NotSjDispatcher(address sjDispatcher, address expectedSjDispatcher);
 error InvalidSJDispatcher();
 error MessageAlreadyProcessed(SJMessage message);
 error SJTokenNotCreated(address sjTokenAddress);
@@ -20,23 +22,17 @@ contract SJReceiver is ISJReceiver, Context {
     using SafeERC20 for ISJToken;
     using SafeERC20 for IERC20;
 
-    address public immutable yaru;
-    address public immutable sjFactory;
+    address public immutable YARU;
+    address public immutable SJ_FACTORY;
+    address public immutable SJ_DISPATCHER;
 
     mapping(bytes32 => bool) private _processedMessages;
     mapping(bytes32 => address) private _advancedMessagesExecutors;
 
-    modifier onlyYaru() {
-        if (_msgSender() != yaru) {
-            revert NotYaru();
-        }
-
-        _;
-    }
-
-    constructor(address yaru_, address sjFactory_) {
-        yaru = yaru_;
-        sjFactory = sjFactory_;
+    constructor(address yaru, address sjDispatcher, address sjFactory) {
+        YARU = yaru;
+        SJ_DISPATCHER = sjDispatcher;
+        SJ_FACTORY = sjFactory;
     }
 
     /// @inheritdoc ISJReceiver
@@ -47,7 +43,7 @@ contract SJReceiver is ISJReceiver, Context {
         if (_processedMessages[messageId]) revert MessageAlreadyProcessed(message);
         if (message.fastLaneFeeAmount == 0) revert InvalidFastLaneFeeAmount(message.fastLaneFeeAmount);
 
-        address executor = _msgSender();
+        address executor = msg.sender;
         _advancedMessagesExecutors[messageId] = executor;
 
         uint256 effectiveAmount = message.amount - message.fastLaneFeeAmount;
@@ -56,7 +52,7 @@ contract SJReceiver is ISJReceiver, Context {
             IERC20(message.underlyingTokenAddress).safeTransferFrom(executor, address(this), effectiveAmount);
             IERC20(message.underlyingTokenAddress).safeTransfer(message.receiver, effectiveAmount);
         } else {
-            address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
+            address sjTokenAddress = ISJFactory(SJ_FACTORY).getSJTokenAddress(
                 message.underlyingTokenAddress,
                 message.underlyingTokenName,
                 message.underlyingTokenSymbol,
@@ -74,72 +70,22 @@ contract SJReceiver is ISJReceiver, Context {
 
     /// @inheritdoc ISJReceiver
     function getMessageId(SJMessage memory message) public pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    message.salt,
-                    message.sourceChainId,
-                    message.underlyingTokenChainId,
-                    message.amount,
-                    message.sender,
-                    message.receiver,
-                    message.underlyingTokenAddress,
-                    message.underlyingTokenDecimals,
-                    message.underlyingTokenName,
-                    message.underlyingTokenSymbol
-                )
-            );
+        return keccak256(abi.encode(message));
     }
 
     /// @inheritdoc ISJReceiver
-    function onMessage(SJMessage calldata message) external onlyYaru {
-        // TODO: Yaru.executeMessages invokes this contract in this way:
-        // (bool success, bytes memory returnData) = address(message.to).call(message.data);
-        // How can we be sure that sjMessage.sender is actually SJDispatcher?
-        // An attacker could generate fake sjMessage (within a fake SJDispatcher on the source chain) by using the address of
-        // SJDispatcher (hardcodedSJDispatcherAddress):
-        //
-        //
-        // SJMessage memory sjMessage = SJMessage(
-        //     salt,
-        //     block.chainid,
-        //     underlyingTokenChainId,
-        //     amount,
-        //     - address(this),
-        //     + hardcodedSJDispatcherAddress,
-        //     receiver,
-        //     underlyingTokenAddress,
-        //     underlyingTokenDecimals,
-        //     underlyingTokenName,
-        //     underlyingTokenSymbol
-        // );
-        //
-        // bytes memory sjData = abi.encodeWithSignature(
-        //     "onMessage((bytes32,uint256,uint256,uint256,address,address,address,uint8,string,string))",
-        //     sjMessage
-        // );
-        //
-        // address sjReceiver = IGovernance(governance).getSJReceiverByChainId(destinationChainId);
-        //
-        // Message[] memory messages = new Message[](1);
-        // messages[0] = Message(sjReceiver, destinationChainId, sjData);
-        //
-        // IYaho(yaho).dispatchMessagesToAdapters(
-        //     messages,
-        //     IGovernance(governance).getSourceAdapters(),
-        //     IGovernance(governance).getDestinationAdapters()
-        // );
-        //
-        //
-        // In this way an attacker could mint an SJToken without depositing the collateral.
-        // Hashi should pass the address of who dispatched the message here.
+    function onMessage(SJMessage calldata message) external {
+        if (msg.sender != YARU) revert NotYaru(msg.sender, YARU);
+        address sender = IYaru(YARU).sender();
+        if (sender != SJ_DISPATCHER) revert NotSjDispatcher(sender, SJ_DISPATCHER);
+
+        // TODO: check used adapters
 
         bytes32 messageId = getMessageId(message);
-
         if (_processedMessages[messageId]) revert MessageAlreadyProcessed(message);
         _processedMessages[messageId] = true;
 
-        address sjTokenAddress = ISJFactory(sjFactory).getSJTokenAddress(
+        address sjTokenAddress = ISJFactory(SJ_FACTORY).getSJTokenAddress(
             message.underlyingTokenAddress,
             message.underlyingTokenName,
             message.underlyingTokenSymbol,
@@ -152,8 +98,8 @@ contract SJReceiver is ISJReceiver, Context {
         address effectiveReceiver = advancedMessageExecutor != address(0) ? advancedMessageExecutor : message.receiver;
 
         block.chainid == message.underlyingTokenChainId
-            ? ISJToken(sjTokenAddress).xReleaseCollateral(effectiveReceiver, message.amount)
-            : ISJToken(sjTokenAddress).xMint(effectiveReceiver, message.amount);
+            ? ISJToken(sjTokenAddress).releaseCollateral(effectiveReceiver, message.amount)
+            : ISJToken(sjTokenAddress).mint(effectiveReceiver, message.amount);
 
         emit MessageProcessed(message);
     }

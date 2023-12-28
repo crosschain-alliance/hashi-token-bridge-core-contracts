@@ -11,7 +11,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 interface ISJToken is IERC20 {
     function xTransfer(uint256 destinationChainId, address account, uint256 amount, uint256 fastLaneFeeAmount) external;
 
-    function xMint(address account, uint256 amount) external;
+    function mint(address account, uint256 amount) external;
 
-    function xReleaseCollateral(address account, uint256 amount) external;
+    function releaseCollateral(address account, uint256 amount) external;
 }

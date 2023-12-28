@@ -86,12 +86,12 @@ contract SJToken is ISJToken, ERC20 {
     }
 
     /// @inheritdoc ISJToken
-    function xMint(address account, uint256 amount) external onlySJReceiver {
+    function mint(address account, uint256 amount) external onlySJReceiver {
         _mint(account, amount);
     }
 
     /// @inheritdoc ISJToken
-    function xReleaseCollateral(address account, uint256 amount) external onlySJReceiver {
+    function releaseCollateral(address account, uint256 amount) external onlySJReceiver {
         IERC20(underlyingTokenAddress).safeTransfer(
             account,
             Utils.normalizeAmountToRealDecimals(amount, underlyingTokenDecimals)
