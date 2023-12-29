@@ -20,6 +20,7 @@
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "3.1.6",
     "@openzeppelin/contracts": "^4.7.3",
+    "@rari-capital/solmate": "^6.4.0",
     "chai": "^4.3.0",
     "commitlint": "^17.6.7",
     "dotenv": "^8.2.0",

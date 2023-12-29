@@ -1,6 +1,8 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 
+const { getHashiMessageFromTransaction, getFakeMessages } = require('./utils')
+
 let governanceNative,
   yahoNative,
   yaruNative,
@@ -44,15 +46,6 @@ const deploySJToken = async (
   return await SJToken.attach(sjTokenAddress)
 }
 
-const getHashiMessageFromTransaction = async (_transaction) => {
-  const receipt = await (await _transaction).wait()
-  const event = receipt.events.find(
-    ({ topics }) => topics[0] === '0xd322231cb78b8ca0ff617b695a9c8b51945673de909fa143c9bb240989bbad21'
-  ) // event DispatchedMessage(Message message); just for testing
-  const [hashiMessage] = ethers.utils.defaultAbiCoder.decode(['(address,uint256,bytes)'], event.data)
-  return hashiMessage
-}
-
 const getSJMessageFromTransaction = async (_transaction) => {
   const receipt = await (await _transaction).wait()
   const event = receipt.events.find(
@@ -63,20 +56,6 @@ const getSJMessageFromTransaction = async (_transaction) => {
     event.data
   )
   return sjMessage
-}
-
-const getFakeMessages = (_hashiMessage, _sjMessage, _destinationChainId = DESTINATION_CHAIN_ID) => {
-  const fakeSJMessage = _sjMessage.slice()
-  fakeSJMessage[2] = _destinationChainId
-  const fakeHashiMessageData =
-    _hashiMessage[2].slice(0, 262) + `000${_destinationChainId}` + _hashiMessage[2].slice(266, _hashiMessage[2].length)
-  const fakeHashiMessage = _hashiMessage.slice()
-  fakeHashiMessage[2] = fakeHashiMessageData
-
-  return {
-    fakeSJMessage,
-    fakeHashiMessage
-  }
 }
 
 describe('SafeJunction', () => {
@@ -101,7 +80,6 @@ describe('SafeJunction', () => {
     yaruNative = await MockYaru.deploy()
     sjDispatcherNative = await SJDispatcher.deploy(yahoNative.address, governanceNative.address)
     sjFactoryNative = await SJFactory.deploy(sjDispatcherNative.address)
-    
 
     // H O S T
     governanceHost = await Governance.deploy()
@@ -109,7 +87,7 @@ describe('SafeJunction', () => {
     yaruHost = await MockYaru.deploy()
     sjDispatcherHost = await SJDispatcher.deploy(yahoHost.address, governanceHost.address)
     sjFactoryHost = await SJFactory.deploy(sjDispatcherHost.address)
-    
+
     sjReceiverHost = await SJReceiver.deploy(yaruHost.address, sjDispatcherNative.address, sjFactoryHost.address)
     sjReceiverNative = await SJReceiver.deploy(yaruNative.address, sjDispatcherHost.address, sjFactoryNative.address)
 
@@ -160,7 +138,7 @@ describe('SafeJunction', () => {
     const sjMessage = await getSJMessageFromTransaction(tx)
     const hashiMessage = await getHashiMessageFromTransaction(tx)
     // trick to enable mint since both sjTokens are deployed on the same chain
-    const { fakeHashiMessage, fakeSJMessage } = getFakeMessages(hashiMessage, sjMessage)
+    const { fakeHashiMessage, fakeSJMessage } = getFakeMessages(hashiMessage, sjMessage, DESTINATION_CHAIN_ID)
 
     await expect(yaruHost.executeMessage(fakeHashiMessage, sjDispatcherNative.address))
       .to.emit(sjReceiverHost, 'MessageProcessed')
