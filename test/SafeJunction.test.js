@@ -1,23 +1,19 @@
 const { expect } = require('chai')
 const { ethers } = require('hardhat')
 
-let governanceNative,
-  yahoNative,
+let yahoNative,
   yaruNative,
-  sjDispatcherNative,
-  sjFactoryNative,
+  nativeSjRouter,
+  nativeSjFactory,
   token,
   sjTokenNative,
   currentChainId,
   owner,
   user1,
-  governanceHost,
   yahoHost,
   yaruHost,
-  sjDispatcherHost,
-  sjFactoryHost,
-  sjReceiverNative,
-  sjReceiverHost,
+  hostSjRouter,
+  hostSjFactory,
   sjTokenHost
 
 const DESTINATION_CHAIN_ID = 2
@@ -28,6 +24,7 @@ const deploySJToken = async (
   _underlyingTokenSymbol,
   _underlyingTokenDecimals,
   _underlyingTokenChainId,
+  _sjRouter,
   { sjFactory }
 ) => {
   const SJToken = await ethers.getContractFactory('SJToken')
@@ -36,7 +33,8 @@ const deploySJToken = async (
     _underlyingTokenName,
     _underlyingTokenSymbol,
     _underlyingTokenDecimals,
-    _underlyingTokenChainId
+    _underlyingTokenChainId,
+    _sjRouter
   )
   const receipt = await transaction.wait()
   const event = receipt.events.find(({ event }) => event === 'SJTokenDeployed')
@@ -83,10 +81,8 @@ describe('SafeJunction', () => {
   beforeEach(async () => {
     currentChainId = (await ethers.provider.getNetwork()).chainId
 
-    const Governance = await ethers.getContractFactory('Governance')
-    const SJDispatcher = await ethers.getContractFactory('SJDispatcher')
+    const SJRouter = await ethers.getContractFactory('SJRouter')
     const SJFactory = await ethers.getContractFactory('SJFactory')
-    const SJReceiver = await ethers.getContractFactory('SJReceiver')
     const MockYaho = await ethers.getContractFactory('MockYaho')
     const MockYaru = await ethers.getContractFactory('MockYaru')
     const Token = await ethers.getContractFactory('Token')
@@ -96,30 +92,21 @@ describe('SafeJunction', () => {
     user1 = signers[1]
 
     /// N A T I V E
-    governanceNative = await Governance.deploy()
     yahoNative = await MockYaho.deploy()
     yaruNative = await MockYaru.deploy()
-    sjDispatcherNative = await SJDispatcher.deploy(yahoNative.address, governanceNative.address)
-    sjFactoryNative = await SJFactory.deploy(sjDispatcherNative.address)
-    
+    nativeSjFactory = await SJFactory.deploy()
+    nativeSjRouter = await SJRouter.deploy(yahoNative.address, yaruNative.address, nativeSjFactory.address)
 
     // H O S T
-    governanceHost = await Governance.deploy()
     yahoHost = await MockYaho.deploy()
     yaruHost = await MockYaru.deploy()
-    sjDispatcherHost = await SJDispatcher.deploy(yahoHost.address, governanceHost.address)
-    sjFactoryHost = await SJFactory.deploy(sjDispatcherHost.address)
-    
-    sjReceiverHost = await SJReceiver.deploy(yaruHost.address, sjDispatcherNative.address, sjFactoryHost.address)
-    sjReceiverNative = await SJReceiver.deploy(yaruNative.address, sjDispatcherHost.address, sjFactoryNative.address)
+    hostSjFactory = await SJFactory.deploy()
+    hostSjRouter = await SJRouter.deploy(yahoHost.address, yaruHost.address, hostSjFactory.address)
 
-    await sjFactoryNative.setSJReceiver(sjReceiverNative.address)
-    await sjFactoryHost.setSJReceiver(sjReceiverHost.address)
-    await sjFactoryNative.renounceOwnership()
-    await sjFactoryHost.renounceOwnership()
-
-    await governanceHost.setSJReceiverByChainId(currentChainId, sjReceiverNative.address)
-    await governanceNative.setSJReceiverByChainId(DESTINATION_CHAIN_ID, sjReceiverHost.address)
+    await nativeSjRouter.setOppositeSjRouter(hostSjRouter.address)
+    await hostSjRouter.setOppositeSjRouter(nativeSjRouter.address)
+    await nativeSjRouter.renounceOwnership()
+    await hostSjRouter.renounceOwnership()
 
     token = await Token.deploy('Token', 'TKN', ethers.utils.parseEther('2000000000'))
 
@@ -129,8 +116,9 @@ describe('SafeJunction', () => {
       await token.symbol(),
       await token.decimals(),
       currentChainId,
+      nativeSjRouter.address,
       {
-        sjFactory: sjFactoryNative
+        sjFactory: nativeSjFactory
       }
     )
 
@@ -140,19 +128,30 @@ describe('SafeJunction', () => {
       await token.symbol(),
       await token.decimals(),
       DESTINATION_CHAIN_ID,
+      hostSjRouter.address,
       {
-        sjFactory: sjFactoryHost
+        sjFactory: hostSjFactory
       }
     )
   })
 
-  it('should be able to pegin a *Token', async () => {
+  it('should be able to pegin and pegout a *Token', async () => {
     const amount = ethers.utils.parseEther('100')
     const balancePre = await token.balanceOf(owner.address)
-    await token.approve(sjTokenNative.address, amount)
+    await token.approve(nativeSjRouter.address, amount)
 
-    const tx = sjTokenNative.xTransfer(2, user1.address, amount, 0)
-    await expect(tx).to.emit(sjDispatcherNative, 'MessageDispatched')
+    const tx = nativeSjRouter.xTransfer(
+      DESTINATION_CHAIN_ID,
+      user1.address,
+      token.address,
+      await token.name(),
+      await token.symbol(),
+      await token.decimals(),
+      currentChainId,
+      amount,
+      0
+    )
+    await expect(tx).to.emit(nativeSjRouter, 'MessageDispatched')
 
     const balancePost = await token.balanceOf(owner.address)
     expect(balancePost).to.be.eq(balancePre.sub(amount))
@@ -162,9 +161,11 @@ describe('SafeJunction', () => {
     // trick to enable mint since both sjTokens are deployed on the same chain
     const { fakeHashiMessage, fakeSJMessage } = getFakeMessages(hashiMessage, sjMessage)
 
-    await expect(yaruHost.executeMessage(fakeHashiMessage, sjDispatcherNative.address))
-      .to.emit(sjReceiverHost, 'MessageProcessed')
+    await expect(yaruHost.executeMessage(fakeHashiMessage, nativeSjRouter.address))
+      .to.emit(hostSjRouter, 'MessageProcessed')
       .withArgs(fakeSJMessage)
+      .and.to.emit(sjTokenHost, 'Transfer')
+      .withArgs('0x0000000000000000000000000000000000000000', user1.address, amount)
     expect(await sjTokenHost.balanceOf(user1.address)).to.be.eq(amount)
   })
 })

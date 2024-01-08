@@ -5,27 +5,23 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Utils} from "./libraries/Utils.sol";
 import {ISJToken} from "./interfaces/ISJToken.sol";
-import {ISJDispatcher} from "./interfaces/ISJDispatcher.sol";
 
 error InvalidSJTransfer();
 error InvalidSJReceiver();
-error InvalidFastLaneFeeAmount(uint256 fastLaneFeeAmount);
 
 contract SJToken is ISJToken, ERC20 {
     using SafeERC20 for IERC20;
 
-    address public immutable underlyingTokenAddress;
-    uint8 public immutable underlyingTokenDecimals;
-    uint256 public immutable underlyingTokenChainId;
-    address public immutable sjDispatcher;
-    address public immutable sjReceiver;
-
+    address public immutable UNDERLYING_TOKEN_ADDRESS;
+    uint8 public immutable UNDERLYING_TOKEN_DECIMALS;
+    uint256 public immutable UNDERLYING_TOKEN_CHAIN_ID;
+    address public immutable SJ_ROUTER;
     // NOTE: Immutable variables cannot have a non-value type
-    string public underlyingTokenName;
-    string public underlyingTokenSymbol;
+    string public UNDERLYING_TOKEN_NAME;
+    string public UNDERLYING_TOKEN_SYMBOL;
 
-    modifier onlySJReceiver() {
-        if (_msgSender() != sjReceiver) {
+    modifier onlySJRouter() {
+        if (_msgSender() != SJ_ROUTER) {
             revert InvalidSJReceiver();
         }
 
@@ -33,68 +29,37 @@ contract SJToken is ISJToken, ERC20 {
     }
 
     constructor(
-        address underlyingTokenAddress_,
-        string memory underlyingTokenName_,
-        string memory underlyingTokenSymbol_,
-        uint8 underlyingTokenDecimals_,
-        uint256 underlyingTokenChainId_,
-        address sjDispatcher_,
-        address sjReceiver_
-    ) ERC20(string.concat("SJ ", underlyingTokenName_), string.concat("*", underlyingTokenSymbol_)) {
+        address underlyingTokenAddress,
+        string memory underlyingTokenName,
+        string memory underlyingTokenSymbol,
+        uint8 underlyingTokenDecimals,
+        uint256 underlyingTokenChainId,
+        address sjRouter_
+    ) ERC20(string.concat("SJ ", underlyingTokenName), string.concat("*", underlyingTokenSymbol)) {
         // TODO: check parameters validity
-        sjDispatcher = sjDispatcher_;
-        sjReceiver = sjReceiver_;
-        underlyingTokenDecimals = underlyingTokenDecimals_;
-        underlyingTokenAddress = underlyingTokenAddress_;
-        underlyingTokenChainId = underlyingTokenChainId_;
-        underlyingTokenName = underlyingTokenName_;
-        underlyingTokenSymbol = underlyingTokenSymbol_;
+        SJ_ROUTER = sjRouter_;
+        UNDERLYING_TOKEN_DECIMALS = underlyingTokenDecimals;
+        UNDERLYING_TOKEN_ADDRESS = underlyingTokenAddress;
+        UNDERLYING_TOKEN_CHAIN_ID = underlyingTokenChainId;
+        underlyingTokenName = underlyingTokenName;
+        underlyingTokenSymbol = underlyingTokenSymbol;
     }
 
     /// @inheritdoc ISJToken
-    function xTransfer(
-        uint256 destinationChainId,
-        address account,
-        uint256 amount,
-        uint256 fastLaneFeeAmount
-    ) external {
-        if (fastLaneFeeAmount > amount) {
-            revert InvalidFastLaneFeeAmount(fastLaneFeeAmount);
-        }
-
-        bool isTokenUnderlyingChainId = block.chainid == underlyingTokenChainId;
-
-        if (destinationChainId != block.chainid && isTokenUnderlyingChainId) {
-            IERC20(underlyingTokenAddress).safeTransferFrom(_msgSender(), address(this), amount);
-        } else if (destinationChainId != block.chainid && !isTokenUnderlyingChainId) {
-            _burn(_msgSender(), amount);
-        } else {
-            revert InvalidSJTransfer();
-        }
-
-        ISJDispatcher(sjDispatcher).dispatch(
-            destinationChainId,
-            underlyingTokenAddress,
-            underlyingTokenName,
-            underlyingTokenSymbol,
-            underlyingTokenDecimals,
-            underlyingTokenChainId,
-            Utils.normalizeAmountTo18Decimals(amount, underlyingTokenDecimals),
-            fastLaneFeeAmount,
-            account
-        );
+    function burn(address account, uint256 amount) external onlySJRouter {
+        _burn(account, amount);
     }
 
     /// @inheritdoc ISJToken
-    function mint(address account, uint256 amount) external onlySJReceiver {
+    function mint(address account, uint256 amount) external onlySJRouter {
         _mint(account, amount);
     }
 
     /// @inheritdoc ISJToken
-    function releaseCollateral(address account, uint256 amount) external onlySJReceiver {
-        IERC20(underlyingTokenAddress).safeTransfer(
+    function releaseCollateral(address account, uint256 amount) external onlySJRouter {
+        IERC20(UNDERLYING_TOKEN_ADDRESS).safeTransfer(
             account,
-            Utils.normalizeAmountToRealDecimals(amount, underlyingTokenDecimals)
+            Utils.normalizeAmountToRealDecimals(amount, UNDERLYING_TOKEN_DECIMALS)
         );
     }
 }

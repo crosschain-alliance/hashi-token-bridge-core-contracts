@@ -1,24 +1,17 @@
 pragma solidity ^0.8.19;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SJToken} from "./SJToken.sol";
 import {ISJFactory} from "./interfaces/ISJFactory.sol";
 
-contract SJFactory is ISJFactory, Ownable {
-    address public immutable SJ_DISPATCHER;
-    address public sjReceiver;
-
-    constructor(address sjDispatcher) {
-        SJ_DISPATCHER = sjDispatcher;
-    }
-
+contract SJFactory is ISJFactory {
     /// @inheritdoc ISJFactory
     function deploy(
         address underlyingTokenAddress,
         string memory underlyingTokenName,
         string memory underlyingSourceTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
+        uint256 underlyingTokenChainId,
+        address sjRouter
     ) public payable returns (address) {
         address sjToken = address(
             new SJToken{salt: hex"0000000000000000000000000000000000000000000000000000000000000000"}(
@@ -27,8 +20,7 @@ contract SJFactory is ISJFactory, Ownable {
                 underlyingSourceTokenSymbol,
                 underlyingTokenDecimals,
                 underlyingTokenChainId,
-                SJ_DISPATCHER,
-                sjReceiver
+                sjRouter
             )
         );
 
@@ -42,8 +34,9 @@ contract SJFactory is ISJFactory, Ownable {
         string memory underlyingTokenName,
         string memory underlyingSourceTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
-    ) public view returns (bytes memory) {
+        uint256 underlyingTokenChainId,
+        address sjRouter
+    ) public pure returns (bytes memory) {
         bytes memory bytecode = type(SJToken).creationCode;
 
         return
@@ -55,8 +48,7 @@ contract SJFactory is ISJFactory, Ownable {
                     underlyingSourceTokenSymbol,
                     underlyingTokenDecimals,
                     underlyingTokenChainId,
-                    SJ_DISPATCHER,
-                    sjReceiver
+                    sjRouter
                 )
             );
     }
@@ -67,14 +59,16 @@ contract SJFactory is ISJFactory, Ownable {
         string memory underlyingTokenName,
         string memory underlyingSourceTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
+        uint256 underlyingTokenChainId,
+        address sjRouter
     ) public view returns (address) {
         bytes memory bytecode = getBytecode(
             underlyingTokenAddress,
             underlyingTokenName,
             underlyingSourceTokenSymbol,
             underlyingTokenDecimals,
-            underlyingTokenChainId
+            underlyingTokenChainId,
+            sjRouter
         );
 
         return
@@ -92,9 +86,5 @@ contract SJFactory is ISJFactory, Ownable {
                     )
                 )
             );
-    }
-
-    function setSJReceiver(address sjReceiver_) external onlyOwner {
-        sjReceiver = sjReceiver_;
     }
 }
