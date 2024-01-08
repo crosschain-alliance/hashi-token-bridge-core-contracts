@@ -14,7 +14,8 @@ interface ISJFactory {
         string memory underlyingTokenName,
         string memory underlyingTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
+        uint256 underlyingTokenChainId,
+        address sjRouter
     ) external payable returns (address);
 
     function getBytecode(
@@ -22,7 +23,8 @@ interface ISJFactory {
         string memory underlyingTokenName,
         string memory underlyingTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
+        uint256 underlyingTokenChainId,
+        address sjRouter
     ) external view returns (bytes memory);
 
     function getSJTokenAddress(
@@ -30,6 +32,7 @@ interface ISJFactory {
         string memory underlyingTokenName,
         string memory underlyingTokenSymbol,
         uint8 underlyingTokenDecimals,
-        uint256 underlyingTokenChainId
+        uint256 underlyingTokenChainId,
+        address sjRouter
     ) external view returns (address);
 }

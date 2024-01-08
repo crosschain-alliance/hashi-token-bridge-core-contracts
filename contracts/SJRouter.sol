@@ -4,27 +4,16 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {CREATE3} from "@rari-capital/solmate/src/utils/CREATE3.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ISJRouter} from "./interfaces/ISJRouter.sol";
+import {SJMessage} from "./interfaces/ISJMessage.sol";
 import {IYaho} from "./interfaces/hashi/IYaho.sol";
 import {Message} from "./interfaces/hashi/IMessage.sol";
 import {IYaru} from "./interfaces/hashi/IYaru.sol";
 import {IXERC20} from "./interfaces/xerc20/IXERC20.sol";
 import {IXERC20Factory} from "./interfaces/xerc20/IXERC20Factory.sol";
 
-contract SJRouter is Ownable {
+contract SJRouter is ISJRouter, Ownable {
     using SafeERC20 for IERC20;
-
-    struct SJMessage {
-        bytes32 salt;
-        uint256 sourceChainId;
-        uint256 destinationChainId;
-        uint256 amount;
-        uint256 fastLaneFeeAmount;
-        address from;
-        address to;
-        address tokenCreator;
-        string tokenName;
-        string tokenSymbol;
-    }
 
     address public immutable YAHO;
     address public immutable YARU;
@@ -34,27 +23,13 @@ contract SJRouter is Ownable {
     mapping(bytes32 => bool) private _processedMessages;
     mapping(bytes32 => address) private _advancedMessagesExecutors;
 
-    error NotYaru(address caller, address expectedYaru);
-    error NotOppositeSJRouter(address sender, address expectedSJRouter);
-    error MessageAlreadyProcessed(SJMessage message);
-    error TokenNotCreated(address token);
-    error MessageAlreadyAdvanced(SJMessage message);
-    error InvalidFastLaneFeeAmount(uint256 fastLaneFeeAmount);
-
-    event MessageDispatched(SJMessage);
-    event MessageProcessed(SJMessage);
-    event MessageAdvanced(SJMessage);
-
     constructor(address yaho, address yaru, address xERC20Factory) {
         YAHO = yaho;
         YARU = yaru;
         XERC20_FACTORY = xERC20Factory;
     }
 
-    /**
-     * @notice Advance a message on the Fastlane
-     * @param message The Safe Junction message
-     */
+    /// @inheritdoc ISJRouter
     function advanceMessage(SJMessage calldata message) external {
         bytes32 messageId = getMessageId(message);
 
@@ -73,20 +48,7 @@ contract SJRouter is Ownable {
         emit MessageAdvanced(message);
     }
 
-    /**
-     * @notice Instruct an cross chain transfer
-     * @dev This function operates effectively only when the 'xtokens' on both the source and destination chains share identical variables:
-     *      'tokenCreator', 'tokenName', and 'tokenSymbol'. To enhance flexibility and overcome this limitation,
-     *      the 'XERC20Factory._deployXERC20' should be modified to include an option for specifying an additional 'bytes32' component within the 'salt'.
-     *      This change would allow for greater adaptability in the deployment process.
-     * @param destinationChainId The destination chain id
-     * @param to The receiver address
-     * @param amount The amount to transfer
-     * @param fastLaneFeeAmount The maximum fee paid to a mm on fastlane
-     * @param tokenCreator The token creator address
-     * @param tokenName The token name
-     * @param tokenSymbol The token symbol
-     */
+    /// @inheritdoc ISJRouter
     function xTransfer(
         uint256 destinationChainId,
         address to,
@@ -129,10 +91,12 @@ contract SJRouter is Ownable {
         emit MessageDispatched(sjMessage);
     }
 
+    /// @inheritdoc ISJRouter
     function getMessageId(SJMessage memory message) public pure returns (bytes32) {
         return keccak256(abi.encode(message));
     }
 
+    /// @inheritdoc ISJRouter
     function onMessage(SJMessage calldata message) external {
         if (msg.sender != YARU) revert NotYaru(msg.sender, YARU);
         address router = IYaru(YARU).sender();
@@ -151,6 +115,7 @@ contract SJRouter is Ownable {
         emit MessageProcessed(message);
     }
 
+    /// @inheritdoc ISJRouter
     function setOppositeSjRouter(address sourceSjRouter_) external onlyOwner {
         OPPOSITE_SJ_ROUTER = sourceSjRouter_;
     }
