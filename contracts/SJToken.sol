@@ -6,9 +6,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Utils} from "./libraries/Utils.sol";
 import {ISJToken} from "./interfaces/ISJToken.sol";
 
-error InvalidSJTransfer();
-error InvalidSJReceiver();
-
 contract SJToken is ISJToken, ERC20 {
     using SafeERC20 for IERC20;
 
@@ -22,7 +19,7 @@ contract SJToken is ISJToken, ERC20 {
 
     modifier onlySJRouter() {
         if (_msgSender() != SJ_ROUTER) {
-            revert InvalidSJReceiver();
+            revert InvalidSjRouter();
         }
 
         _;
