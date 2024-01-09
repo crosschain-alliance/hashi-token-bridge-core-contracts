@@ -1,6 +1,10 @@
-# Safe Junction Core Contracts
+# Safe Junction Core Contracts (xERC20)
+
+![alt text](./resources/diagram.png)
 
 [![GitHub license](https://img.shields.io/badge/license-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
+
+
 
 ## Overview
 
@@ -13,6 +17,29 @@ Today the bridging ecosystem suffers from excessive fragmentation. Safe Junction
 In the worst case, the system's speed is equivalent to that of the slowest oracle in the network. However, when the Fast Lane functionality gets used, it overcomes this drawback and enables much higher speed: market makers can process cross-chain transfers in advance, providing their liquidity in response to a user request, and then securely reclaim the liquidity (plus a service fee) once all oracles have processed the cross-chain request at their standard speed.
 
 It is important to understand how Safe Junction differs from existing cross-chain solutions (bridges, aggregators, etc.) in terms of security (which is additive), speed (via Fast Lane MM intervention) and compatibility (as it aims to be 100% agnostic, and not just EVM compatible).
+
+&nbsp;
+
+***
+
+&nbsp;
+
+## How it works
+
+1. **Deploy xERC20 Contracts**: Start by deploying xERC20 contracts as outlined in the [xERC20 documentation](https://docs.connext.network/usecases/xerc20).
+   
+2. **Obtain xERC20 Token**: For a specific token, acquire the corresponding xERC20 token on the native chain by locking the native token in the xERC20 Lockbox.
+
+3. **Use SJRouter for Cross-Chain Actions**: Leverage SJRouter contracts and their `xTransfer` function for cross-chain minting/burning. This function burns the chosen amount of tokens and uses Hashi to send a cross-chain message containing all necessary parameters for calculating the xERC20 token address on the destination chain.
+
+4. **Message Dispatch Through Hashi**: Hashi dispatches the message to all the selected adapters.
+
+5. **Message Processing by Bridges**: Each bridge involved processes the message and stores the message hash in their respective adapters.
+
+6. **Execution of Hashi Message**: After all bridges have processed the message, Hashi executes the message.
+
+7. **Final Minting Process**: Once the message is executed, the host SJRouter trustlessly calculates the xERC20 token address and proceeds to mint the designated quantity of xERC20 tokens. Additionally, there's a provision where a Market Maker might offer an advance on the tokens to the user, for a fee. This service is particularly useful for users who prefer immediate token access, bypassing the waiting period required for all bridges to process the message.
+
 
 &nbsp;
 
