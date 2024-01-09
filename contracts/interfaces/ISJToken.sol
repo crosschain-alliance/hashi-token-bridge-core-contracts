@@ -1,6 +1,6 @@
 pragma solidity ^0.8.19;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IOFTV2} from "@lz/solidity-examples/contracts/token/oft/v2/interfaces/IOFTV2.sol";
 
 /**
  * @title ISJToken
@@ -8,10 +8,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  *
  * @notice
  */
-interface ISJToken is IERC20 {
-    function burn(address account, uint256 amount) external;
+interface ISJToken is IOFTV2 {
+    error NotNative();
 
-    function mint(address account, uint256 amount) external;
+    function xTransfer(uint256 destinationChainId, address to, uint256 amount) external payable;
 
-    function releaseCollateral(address account, uint256 amount) external;
+    function unwrap(address to, uint256 amount) external;
 }
