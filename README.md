@@ -1,10 +1,9 @@
 # Safe Junction Core Contracts (xERC20)
 
-![alt text](./resources/diagram.png)
 
 [![GitHub license](https://img.shields.io/badge/license-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
 
-
+![alt text](./resources/diagram.png)
 
 ## Overview
 
