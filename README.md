@@ -1,6 +1,9 @@
-# Safe Junction Core Contracts
+# Safe Junction Core Contracts (OFT)
+
 
 [![GitHub license](https://img.shields.io/badge/license-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
+
+![alt text](./resources/diagram.png)
 
 ## Overview
 
@@ -13,6 +16,31 @@ Today the bridging ecosystem suffers from excessive fragmentation. Safe Junction
 In the worst case, the system's speed is equivalent to that of the slowest oracle in the network. However, when the Fast Lane functionality gets used, it overcomes this drawback and enables much higher speed: market makers can process cross-chain transfers in advance, providing their liquidity in response to a user request, and then securely reclaim the liquidity (plus a service fee) once all oracles have processed the cross-chain request at their standard speed.
 
 It is important to understand how Safe Junction differs from existing cross-chain solutions (bridges, aggregators, etc.) in terms of security (which is additive), speed (via Fast Lane MM intervention) and compatibility (as it aims to be 100% agnostic, and not just EVM compatible).
+
+&nbsp;
+
+***
+
+&nbsp;
+
+## How it works
+
+1. Deploy two `SJLZEndpoints`, one on each of the source and destination chains. SJLZEndpoint acts as a Layer Zero compatible endpoint, utilizing Hashi for cross-chain message propagation.
+
+2. Deploy two `SJToken` contracts, following the `OFT` (Omnichain Fungible Token) standard. One contract on the source chain and the other on the destination chain. Reference the [OFT documentation](https://layerzero.gitbook.io/docs/evm-guides/layerzero-omnichain-contracts/oft/oftv2) for guidance.
+
+3. Execute `xTransfer` on the SJToken to start a cross-chain minting or burning process. Ensure you approve the required token amount for wrapping if you are on the native chain.
+
+4. The `xTransfer` function internally calls `_send`, a function defined in the OFT standard. This function, in turn, invokes the `send` function on `SJLZEndpoint` with a specific payload.
+
+5. The `SJLZEndpoint` employs `Yah` to relay the message across chains using the Hashi Message Relays.
+
+6. Each involved bridge processes the message and stores the hash of the message in its adapter.
+
+7. After all bridges have processed the message, Hashi executes it.
+
+8. Upon execution, `Yaru` calls `SJLZEndpoint.receivePayload`, which then calls `lzReceive` on the host SJToken. The `lzReceive` implemented within the OFT contract, mints the corresponding amount of tokens.
+
 
 &nbsp;
 
