@@ -1,7 +1,7 @@
 # Safe Junction Core Contracts (OFT)
 
 
-[![GitHub license](https://img.shields.io/badge/license-TODO.svg)](https://github.com/safe-junction/sj-core-contracts/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT.svg)](https://github.com/crosschain-alliance/sj-core-contracts/blob/feat/oft/LICENSE)
 
 ![alt text](./resources/diagram.png)
 
@@ -57,7 +57,7 @@ Ensure you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/)
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/safe-junction/sj-core-contracts.git
+git clone https://github.com/crosschain-alliance/sj-core-contracts.git
 cd sj-core-contracts
 ```
 
@@ -115,7 +115,7 @@ This project is licensed under the TODO License - see the [LICENSE](LICENSE) fil
 &nbsp;
 ## Contact
 
-For any inquiries, issues, or feedback, please [raise an issue on GitHub](https://github.com/safe-junction/sj-core-contracts/issues) or contact the team through our [official website](#).
+For any inquiries, issues, or feedback, please [raise an issue on GitHub](https://github.com/crosschain-alliance/sj-core-contracts/issues) or contact the team through our [official website](#).
 
 &nbsp;
 
