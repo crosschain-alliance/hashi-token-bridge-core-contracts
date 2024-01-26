@@ -33,7 +33,7 @@ It is important to understand how Safe Junction differs from existing cross-chai
 
 4. The `xTransfer` function internally calls `_send`, a function defined in the OFT standard. This function, in turn, invokes the `send` function on `SJLZEndpoint` with a specific payload.
 
-5. The `SJLZEndpoint` employs `Yah` to relay the message across chains using the Hashi Message Relays.
+5. The `SJLZEndpoint` employs `Yaho` to relay the message across chains using the Hashi Message Relays.
 
 6. Each involved bridge processes the message and stores the hash of the message in its adapter.
 
