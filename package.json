@@ -2,7 +2,7 @@
   "name": "@sj/core-contracts",
   "version": "0.0.1",
   "description": "Safe Function core contracts",
-  "license": "TODO",
+  "license": "MIT",
   "scripts": {
     "compile": "npx hardhat compile",
     "contracts:lint-and-format": "prettier --write \"./contracts/**/*.+(sol)\" && solhint ./contracts --fix",
