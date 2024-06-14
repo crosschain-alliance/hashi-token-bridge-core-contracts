@@ -1,7 +1,6 @@
 {
-  "name": "@sj/core-contracts",
+  "name": "hashi-token-bridge-core-contracts",
   "version": "0.0.1",
-  "description": "Safe Function core contracts",
   "license": "MIT",
   "scripts": {
     "compile": "npx hardhat compile",
