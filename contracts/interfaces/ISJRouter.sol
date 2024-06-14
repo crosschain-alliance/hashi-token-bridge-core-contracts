@@ -17,7 +17,7 @@ interface ISJRouter {
 
     /**
      * @notice Advance a message on the Fastlane
-     * @param message The Safe Junction message
+     * @param message The Hashi Token Bridge message
      */
     function advanceMessage(SJMessage calldata message) external;
 
